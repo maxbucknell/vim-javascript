@@ -87,9 +87,9 @@ endfunction
 let s:block_regex = '[{([]' . s:line_term
 
 let s:operator_first = s:line_pre . '\%([.,:?]\|\([-/+*]\)\%(\1\|\*\|\/\)\@!\|||\|&&\)'
+let s:destructuring_operator_first = s:line_pre . '\.\{3\}'
 
 let s:var_stmt = s:line_pre . '\%(const\|let\|var\)\s\+\C'
-
 let s:comma_last = ',' . s:line_term
 
 " 2. Auxiliary Functions {{{1
@@ -403,6 +403,10 @@ function GetJavascriptIndent()
 
     " If previous line starts with an operator...
   elseif (s:Match(prevline, s:operator_first) && !s:Match(prevline,s:continuation_regex))||getline(prevline) =~ ');\=' . s:line_term
+    if (s:Match(prevline, s:destructuring_operator_first))
+      " If prevline is destructuring operator, don't indent
+      return indent(prevline)
+    end
     let counts = s:LineHasOpeningBrackets(prevline)
     if counts[0] == '2' && !s:Match(prevline, s:operator_first)
       call cursor(prevline, 1)
